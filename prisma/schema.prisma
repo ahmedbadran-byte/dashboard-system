@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Department {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  owner     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reports   Report[]
+  kpis      Kpi[]
+
+  @@map("departments")
+}
+
+model Report {
+  id           Int        @id @default(autoincrement())
+  title        String
+  status       ReportStatus
+  submittedAt  DateTime?
+  departmentId Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@index([departmentId])
+  @@map("reports")
+}
+
+model Kpi {
+  id           Int      @id @default(autoincrement())
+  name         String
+  currentValue String
+  targetValue  String
+  departmentId Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@index([departmentId])
+  @@map("kpis")
+}
+
+model FinancialCvp {
+  id          Int      @id @default(autoincrement())
+  metric      String
+  value       String
+  periodLabel String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("financial_cvp")
+}
+
+model FinancialBreakEven {
+  id          Int      @id @default(autoincrement())
+  metric      String
+  value       String
+  periodLabel String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("financial_break_even")
+}
+
+model FinancialCba {
+  id          Int      @id @default(autoincrement())
+  metric      String
+  value       String
+  periodLabel String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("financial_cba")
+}
+
+model CostAccounting {
+  id          Int      @id @default(autoincrement())
+  metric      String
+  value       String
+  periodLabel String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("cost_accounting")
+}
+
+enum ReportStatus {
+  DRAFT
+  IN_REVIEW
+  SUBMITTED
+}
