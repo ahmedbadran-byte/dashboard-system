@@ -1,143 +1,71 @@
-import { DecisionType, LanguageCode, PrismaClient, SeverityLevel } from '@prisma/client';
+import { PrismaClient, ReportStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  await prisma.decisionItem.deleteMany();
-  await prisma.kpiValue.deleteMany();
-  await prisma.kpiDefinition.deleteMany();
-  await prisma.reportInstance.deleteMany();
-  await prisma.reportDefinition.deleteMany();
-  await prisma.departmentTab.deleteMany();
-  await prisma.structureRole.deleteMany();
+  await prisma.report.deleteMany();
+  await prisma.kpi.deleteMany();
   await prisma.department.deleteMany();
-  await prisma.translation.deleteMany();
-  await prisma.appSetting.deleteMany();
-  await prisma.userPreference.deleteMany();
-  await prisma.user.deleteMany();
+  await prisma.financialCvp.deleteMany();
+  await prisma.financialBreakEven.deleteMany();
+  await prisma.financialCba.deleteMany();
+  await prisma.costAccounting.deleteMany();
 
-  const [finance, operations, sales] = await prisma.$transaction([
-    prisma.department.create({ data: { slug: 'finance', nameEn: 'Finance', nameAr: 'المالية', sortOrder: 1 } }),
-    prisma.department.create({ data: { slug: 'operations', nameEn: 'Operations', nameAr: 'العمليات', sortOrder: 2 } }),
-    prisma.department.create({ data: { slug: 'sales', nameEn: 'Sales', nameAr: 'المبيعات', sortOrder: 3 } })
+  const departments = await prisma.$transaction([
+    prisma.department.create({ data: { name: 'Finance', owner: 'Alice Morgan' } }),
+    prisma.department.create({ data: { name: 'Operations', owner: 'Jay Patel' } }),
+    prisma.department.create({ data: { name: 'Sales', owner: 'Lena Brooks' } }),
+    prisma.department.create({ data: { name: 'HR', owner: 'Nora Kim' } })
   ]);
 
-  for (const department of [finance, operations, sales]) {
-    await prisma.departmentTab.createMany({
-      data: [
-        { departmentId: department.id, key: 'dashboard', labelEn: 'Dashboard', labelAr: 'لوحة المعلومات', sortOrder: 1 },
-        { departmentId: department.id, key: 'kpis', labelEn: 'KPIs', labelAr: 'مؤشرات الأداء', sortOrder: 2 },
-        { departmentId: department.id, key: 'reports', labelEn: 'Reports', labelAr: 'التقارير', sortOrder: 3 },
-        { departmentId: department.id, key: 'structure', labelEn: 'Structure', labelAr: 'الهيكل التنظيمي', sortOrder: 4 }
-      ]
-    });
-  }
-
-  const reportDef = await prisma.reportDefinition.create({
-    data: {
-      departmentId: operations.id,
-      name: 'Operational Productivity Report',
-      type: 'Operational',
-      frequency: 'Monthly',
-      source: 'WMS + ERP',
-      displayFormat: 'PDF + Table',
-      usedInDashboard: true,
-      usedInDecisionCenter: true
-    }
-  });
-
-  const reportV2 = await prisma.reportInstance.create({
-    data: {
-      reportDefinitionId: reportDef.id,
-      periodKey: '2026-Q2',
-      version: 2,
-      dataReference: 'storage://reports/operations/2026-q2-v2'
-    }
-  });
-
-  const kpiDef = await prisma.kpiDefinition.create({
-    data: {
-      departmentId: operations.id,
-      name: 'On-Time Fulfillment',
-      description: 'Delivered orders within SLA',
-      unit: '%',
-      target: '93',
-      frequency: 'Monthly',
-      owner: 'Operations Manager'
-    }
-  });
-
-  await prisma.kpiValue.create({
-    data: {
-      kpiDefinitionId: kpiDef.id,
-      periodKey: '2026-04',
-      actual: '90',
-      trend: 'Down',
-      status: 'At Risk'
-    }
-  });
-
-  await prisma.structureRole.create({
-    data: {
-      departmentId: operations.id,
-      roleName: 'Warehouse Supervisor',
-      assignedPerson: 'J. Patel',
-      headcount: 2,
-      vacantPositions: 1,
-      jobDescription: 'Leads warehouse planning and shift performance.'
-    }
-  });
-
-  await prisma.decisionItem.createMany({
+  await prisma.report.createMany({
     data: [
-      {
-        type: DecisionType.ALERT,
-        title: 'Fulfillment SLA breach risk',
-        description: 'Backlog may push late deliveries above threshold next week.',
-        severity: SeverityLevel.HIGH,
-        periodKey: '2026-Q2',
-        departmentId: operations.id,
-        reportInstanceId: reportV2.id
-      },
-      {
-        type: DecisionType.INSIGHT,
-        title: 'Enterprise renewals supporting growth',
-        description: 'Growth trend correlated with enterprise renewal contracts.',
-        periodKey: '2026-04',
-        departmentId: sales.id
-      },
-      {
-        type: DecisionType.RECOMMENDATION,
-        title: 'Redistribute overtime load',
-        description: 'Shift overtime hours across two warehouses over next 14 days.',
-        periodKey: '2026-Q2',
-        departmentId: operations.id,
-        reportInstanceId: reportV2.id
-      }
+      { title: 'Monthly Financial Review', status: ReportStatus.SUBMITTED, departmentId: departments[0].id },
+      { title: 'Operations Efficiency Review', status: ReportStatus.DRAFT, departmentId: departments[1].id },
+      { title: 'Sales Pipeline Summary', status: ReportStatus.SUBMITTED, departmentId: departments[2].id },
+      { title: 'Talent Acquisition Metrics', status: ReportStatus.IN_REVIEW, departmentId: departments[3].id }
     ]
   });
 
-  await prisma.translation.createMany({
+  await prisma.kpi.createMany({
     data: [
-      { key: 'decisionCenter', language: LanguageCode.EN, value: 'Decision Center', scope: 'ui' },
-      { key: 'decisionCenter', language: LanguageCode.AR, value: 'مركز القرارات', scope: 'ui' }
+      { name: 'Forecast Accuracy', currentValue: '96%', targetValue: '94%', departmentId: departments[0].id },
+      { name: 'Unit Cost Reduction', currentValue: '6.2%', targetValue: '5%', departmentId: departments[1].id },
+      { name: 'Customer Retention', currentValue: '92%', targetValue: '90%', departmentId: departments[2].id },
+      { name: 'Time to Hire', currentValue: '24 days', targetValue: '28 days', departmentId: departments[3].id }
     ]
   });
 
-  await prisma.appSetting.createMany({
+  await prisma.financialCvp.createMany({
     data: [
-      { key: 'defaultLanguage', value: 'en' },
-      { key: 'dateFormat', value: 'YYYY-MM-DD' },
-      { key: 'statusColor.good', value: '#16a34a' }
+      { metric: 'Contribution Margin Ratio', value: '41%', periodLabel: 'Q2 2026' },
+      { metric: 'Expected Sales Volume', value: '145,000 units', periodLabel: 'Q2 2026' },
+      { metric: 'Projected Net Income', value: '$1.3M', periodLabel: 'Q2 2026' }
     ]
   });
 
-  const admin = await prisma.user.create({
-    data: { email: 'admin@kleen.internal', displayName: 'System Admin', isAdmin: true }
+  await prisma.financialBreakEven.createMany({
+    data: [
+      { metric: 'Break-Even Units', value: '98,500', periodLabel: 'Q2 2026' },
+      { metric: 'Break-Even Revenue', value: '$2.95M', periodLabel: 'Q2 2026' },
+      { metric: 'Safety Margin', value: '28%', periodLabel: 'Q2 2026' }
+    ]
   });
 
-  await prisma.userPreference.create({
-    data: { userId: admin.id, language: LanguageCode.EN, dateFormat: 'YYYY-MM-DD', colorProfile: 'executive' }
+  await prisma.financialCba.createMany({
+    data: [
+      { metric: 'Project Cost', value: '$860K', periodLabel: 'Q2 2026' },
+      { metric: 'Expected Benefit', value: '$1.47M', periodLabel: 'Q2 2026' },
+      { metric: 'Benefit-Cost Ratio', value: '1.71', periodLabel: 'Q2 2026' }
+    ]
+  });
+
+  await prisma.costAccounting.createMany({
+    data: [
+      { metric: 'Overhead Absorption Rate', value: '132%', periodLabel: 'Q2 2026' },
+      { metric: 'Standard Cost Variance', value: '-2.4%', periodLabel: 'Q2 2026' },
+      { metric: 'Inventory Carrying Cost', value: '$210K', periodLabel: 'Q2 2026' }
+    ]
   });
 }
 

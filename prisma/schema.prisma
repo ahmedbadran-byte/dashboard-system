@@ -7,188 +7,95 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum LanguageCode {
-  EN
-  AR
-}
-
-enum DecisionType {
-  ALERT
-  INSIGHT
-  RECOMMENDATION
-}
-
-enum SeverityLevel {
-  LOW
-  MEDIUM
-  HIGH
-  CRITICAL
-}
-
-model User {
-  id          Int             @id @default(autoincrement())
-  email       String          @unique
-  displayName String
-  isAdmin     Boolean         @default(false)
-  preference  UserPreference?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-
-  @@map("users")
-}
-
-model UserPreference {
-  id           Int          @id @default(autoincrement())
-  userId       Int          @unique
-  language     LanguageCode @default(EN)
-  dateFormat   String       @default("YYYY-MM-DD")
-  colorProfile String       @default("default")
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("user_preferences")
-}
-
 model Department {
   id        Int      @id @default(autoincrement())
-  slug      String   @unique
-  nameEn    String
-  nameAr    String
-  sortOrder Int      @default(0)
-  active    Boolean  @default(true)
+  name      String   @unique
+  owner     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tabs              DepartmentTab[]
-  reportDefinitions ReportDefinition[]
-  kpiDefinitions    KpiDefinition[]
-  structureRoles    StructureRole[]
-  decisionItems     DecisionItem[]
+  reports   Report[]
+  kpis      Kpi[]
 
   @@map("departments")
 }
 
-model DepartmentTab {
-  id           Int      @id @default(autoincrement())
+model Report {
+  id           Int        @id @default(autoincrement())
+  title        String
+  status       ReportStatus
+  submittedAt  DateTime?
   departmentId Int
-  key          String
-  labelEn      String
-  labelAr      String
-  sortOrder    Int      @default(0)
-  enabled      Boolean  @default(true)
-  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
-  @@unique([departmentId, key])
-  @@map("department_tabs")
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@index([departmentId])
+  @@map("reports")
 }
 
-model ReportDefinition {
-  id                   Int      @id @default(autoincrement())
-  departmentId         Int
-  name                 String
-  type                 String
-  frequency            String
-  source               String
-  displayFormat        String
-  usedInDashboard      Boolean  @default(false)
-  usedInDecisionCenter Boolean  @default(false)
-  createdAt            DateTime @default(now())
-
-  department Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  instances  ReportInstance[]
-
-  @@map("report_definitions")
-}
-
-model ReportInstance {
-  id                 Int      @id @default(autoincrement())
-  reportDefinitionId Int
-  periodKey          String
-  version            Int
-  createdDate        DateTime @default(now())
-  dataReference      String
-  reportDefinition   ReportDefinition @relation(fields: [reportDefinitionId], references: [id], onDelete: Cascade)
-
-  @@unique([reportDefinitionId, periodKey, version])
-  @@map("report_instances")
-}
-
-model KpiDefinition {
+model Kpi {
   id           Int      @id @default(autoincrement())
-  departmentId Int
   name         String
-  description  String
-  unit         String
-  target       String
-  frequency    String
-  owner        String?
-
-  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  values     KpiValue[]
-
-  @@map("kpi_definitions")
-}
-
-model KpiValue {
-  id              Int      @id @default(autoincrement())
-  kpiDefinitionId Int
-  periodKey       String
-  actual          String
-  trend           String
-  status          String
-  createdAt       DateTime @default(now())
-
-  kpiDefinition KpiDefinition @relation(fields: [kpiDefinitionId], references: [id], onDelete: Cascade)
-
-  @@unique([kpiDefinitionId, periodKey])
-  @@map("kpi_values")
-}
-
-model StructureRole {
-  id              Int      @id @default(autoincrement())
-  departmentId    Int
-  roleName        String
-  assignedPerson  String?
-  headcount       Int
-  vacantPositions Int
-  jobDescription  String
+  currentValue String
+  targetValue  String
+  departmentId Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
 
-  @@map("structure_roles")
+  @@index([departmentId])
+  @@map("kpis")
 }
 
-model DecisionItem {
-  id               Int           @id @default(autoincrement())
-  type             DecisionType
-  title            String
-  description      String
-  severity         SeverityLevel?
-  periodKey        String
-  departmentId     Int
-  reportInstanceId Int?
-  createdAt        DateTime      @default(now())
+model FinancialCvp {
+  id          Int      @id @default(autoincrement())
+  metric      String
+  value       String
+  periodLabel String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  department     Department    @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  reportInstance ReportInstance? @relation(fields: [reportInstanceId], references: [id], onDelete: SetNull)
-
-  @@map("decision_items")
+  @@map("financial_cvp")
 }
 
-model Translation {
-  id        Int          @id @default(autoincrement())
-  key       String
-  language  LanguageCode
-  value     String
-  scope     String       @default("ui")
+model FinancialBreakEven {
+  id          Int      @id @default(autoincrement())
+  metric      String
+  value       String
+  periodLabel String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@unique([key, language, scope])
-  @@map("translations")
+  @@map("financial_break_even")
 }
 
-model AppSetting {
-  id    Int    @id @default(autoincrement())
-  key   String @unique
-  value String
+model FinancialCba {
+  id          Int      @id @default(autoincrement())
+  metric      String
+  value       String
+  periodLabel String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@map("app_settings")
+  @@map("financial_cba")
+}
+
+model CostAccounting {
+  id          Int      @id @default(autoincrement())
+  metric      String
+  value       String
+  periodLabel String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("cost_accounting")
+}
+
+enum ReportStatus {
+  DRAFT
+  IN_REVIEW
+  SUBMITTED
 }

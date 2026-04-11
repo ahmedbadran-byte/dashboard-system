@@ -1,26 +1,13 @@
-# Kleen Management System (Configuration-Ready Foundation)
+# Kleen Executive Dashboard (Foundation)
 
-This project is a bilingual (English/Arabic) internal management platform foundation for Kleen.
+First functional foundation for an internal executive dashboard web app built with:
 
-## Current foundation capabilities
+- Next.js + React + TypeScript
+- Tailwind CSS
+- Prisma + PostgreSQL
+- Recharts
 
-- Decision Center for global outputs (alerts, insights, recommendations)
-- Dynamic department navigation and reusable department template with 4 tabs:
-  - Dashboard
-  - KPIs
-  - Reports
-  - Structure
-- Admin Panel modules for:
-  - Department Management
-  - Reports Configuration
-  - KPI Configuration
-  - Decision Rules
-  - Language & Translations
-  - General Settings
-- User language preference foundation (English/Arabic + RTL/LTR handling)
-- Prisma schema and seed prepared for dynamic departments and historical report/KPI records
-
-## Run
+## Getting Started
 
 ```bash
 npm install
@@ -29,9 +16,18 @@ npm run prisma:generate
 npm run dev
 ```
 
-## Database
+## Database setup
 
 ```bash
-npm run prisma:migrate -- --name init_management_foundation
+npm run prisma:migrate -- --name init
 npm run prisma:seed
 ```
+
+## Routes
+
+- `/dashboard`
+- `/reports`
+- `/kpis`
+- `/financial-information`
+- `/settings`
+- `/login`

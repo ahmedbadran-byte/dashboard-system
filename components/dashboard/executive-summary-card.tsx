@@ -1,42 +1,20 @@
 import clsx from 'clsx';
-import type { ExecutiveKpiCard } from '@/lib/mock-data';
+import type { ExecutiveSummaryCard } from '@/lib/mock-data';
 
-const statusStyles: Record<ExecutiveKpiCard['status'], string> = {
-  Good: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-  Warning: 'bg-amber-50 text-amber-700 border-amber-100',
-  Critical: 'bg-rose-50 text-rose-700 border-rose-100'
+const toneClassMap: Record<ExecutiveSummaryCard['tone'], string> = {
+  positive: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+  neutral: 'text-blue-700 bg-blue-50 border-blue-100',
+  warning: 'text-amber-700 bg-amber-50 border-amber-100'
 };
 
-function formatValue(value: number, unit: ExecutiveKpiCard['unit']) {
-  if (unit === '$M') return `$${value.toFixed(1)}M`;
-  return `${value}${unit}`;
-}
-
-export function ExecutiveSummaryCardView({ card }: { card: ExecutiveKpiCard }) {
-  const delta = card.value - card.previous;
-  const isUnderperforming = card.value < card.target;
-
+export function ExecutiveSummaryCardView({ card }: { card: ExecutiveSummaryCard }) {
   return (
-    <article className={clsx('card p-5', isUnderperforming && 'border-rose-300 bg-rose-50/30')}>
+    <article className="card p-5">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-slate-500">{card.department}</p>
-          <h3 className="text-base font-semibold text-slate-900">{card.label}</h3>
-        </div>
-        <span className={clsx('rounded-full border px-2 py-1 text-xs font-semibold', statusStyles[card.status])}>{card.status}</span>
+        <h3 className="text-sm font-semibold text-slate-900">{card.title}</h3>
+        <span className={clsx('rounded-full border px-2 py-1 text-xs font-semibold', toneClassMap[card.tone])}>{card.delta}</span>
       </div>
-
-      <p className={clsx('mt-4 text-3xl font-bold', isUnderperforming ? 'text-rose-700' : 'text-slate-900')}>
-        {formatValue(card.value, card.unit)}
-      </p>
-      <p className="mt-1 text-xs text-slate-500">
-        Target: {formatValue(card.target, card.unit)}
-      </p>
-      <p className={clsx('mt-2 text-sm font-medium', delta >= 0 ? 'text-emerald-700' : 'text-rose-700')}>
-        {card.comparisonLabel}: {delta >= 0 ? '+' : ''}
-        {delta.toFixed(1)}
-        {card.unit}
-      </p>
+      <p className="mt-4 text-3xl font-bold text-slate-900">{card.value}</p>
       <p className="mt-2 text-sm text-slate-600">{card.insight}</p>
     </article>
   );

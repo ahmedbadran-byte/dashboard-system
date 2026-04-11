@@ -2,75 +2,45 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { BarChart3, FileText, Gauge, LayoutDashboard, Settings2, WalletCards } from 'lucide-react';
 import clsx from 'clsx';
-import { departments } from '@/lib/mock-data';
-import { useLanguage } from '@/components/providers/language-provider';
 
-const tabs = [
-  { key: 'dashboard', path: 'dashboard' },
-  { key: 'kpis', path: 'kpis' },
-  { key: 'reports', path: 'reports' },
-  { key: 'structure', path: 'structure' }
-] as const;
+const links = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/reports', label: 'Reports', icon: FileText },
+  { href: '/kpis', label: 'KPIs', icon: Gauge },
+  { href: '/financial-information', label: 'Financial Information', icon: WalletCards },
+  { href: '/settings', label: 'Settings', icon: Settings2 }
+];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { t, language } = useLanguage();
 
   return (
-    <aside className="w-full border-r border-slate-200 bg-white px-4 py-6 lg:w-80">
-      <div className="mb-6 rounded-2xl bg-gradient-to-r from-brand-700 to-cyan-600 px-3 py-4 text-white">
-        <p className="text-xs uppercase tracking-wide text-white/80">Kleen</p>
-        <h1 className="text-lg font-semibold">{t('appTitle')}</h1>
+    <aside className="w-full border-r border-slate-200 bg-white px-4 py-6 lg:w-64">
+      <div className="mb-8 flex items-center gap-2 px-2">
+        <BarChart3 className="h-6 w-6 text-brand-600" />
+        <div>
+          <p className="text-xs uppercase tracking-wide text-slate-500">Internal</p>
+          <h1 className="font-semibold text-slate-900">Kleen Exec Portal</h1>
+        </div>
       </div>
-
-      <nav className="space-y-6">
-        <section>
-          <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t('decisionCenter')}</p>
+      <nav className="space-y-1">
+        {links.map(({ href, label, icon: Icon }) => (
           <Link
-            href="/decision-center"
-            className={clsx('block rounded-lg px-3 py-2 text-sm', pathname === '/decision-center' ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100')}
+            key={href}
+            href={href}
+            className={clsx(
+              'flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors',
+              pathname === href
+                ? 'bg-brand-50 text-brand-700'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            )}
           >
-            {t('decisionCenter')}
+            <Icon className="h-4 w-4" />
+            {label}
           </Link>
-        </section>
-
-        <section>
-          <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t('departments')}</p>
-          <div className="space-y-3">
-            {departments
-              .sort((a, b) => a.order - b.order)
-              .map((department) => (
-                <div key={department.id} className="rounded-xl border border-slate-200 p-2">
-                  <p className="px-2 text-sm font-semibold text-slate-800">{language === 'ar' ? department.nameAr : department.nameEn}</p>
-                  <div className="mt-1 grid grid-cols-2 gap-1">
-                    {tabs.map((tab) => {
-                      const href = `/departments/${department.slug}/${tab.path}`;
-                      return (
-                        <Link
-                          key={tab.key}
-                          href={href}
-                          className={clsx('rounded-md px-2 py-1 text-xs', pathname === href ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100')}
-                        >
-                          {t(tab.key)}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-          </div>
-        </section>
-
-        <section>
-          <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t('adminPanel')}</p>
-          <Link
-            href="/admin"
-            className={clsx('block rounded-lg px-3 py-2 text-sm', pathname.startsWith('/admin') ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100')}
-          >
-            {t('adminPanel')}
-          </Link>
-        </section>
+        ))}
       </nav>
     </aside>
   );
